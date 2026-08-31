@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/* Тёмная тема — значения по умолчанию */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-canvas: #101311;
+  --color-surface: #191d1a;
+  --color-elevated: #1f241f;
+  --color-ink: #e9ebe6;
+  --color-muted: #9ba39a;
+  --color-line: #2a302b;
+  --color-accent: #4ec98a;
+  --color-accent-soft: #16241c;
+  --color-accent-contrast: #08120c;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --color-canvas: #f6f5f2;
+  --color-surface: #ffffff;
+  --color-elevated: #ffffff;
+  --color-ink: #16150f;
+  --color-muted: #6f6c62;
+  --color-line: #e4e1da;
+  --color-accent: #1f6f4a;
+  --color-accent-soft: #e7f2ec;
+  --color-accent-contrast: #ffffff;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
