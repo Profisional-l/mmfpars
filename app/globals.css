@@ -37,6 +37,8 @@ body {
   background: var(--color-canvas);
   color: var(--color-ink);
   -webkit-tap-highlight-color: transparent;
+  /* чтобы status bar / home indicator подхватывали цвет canvas */
+  min-height: 100dvh;
 }
 
 * {
