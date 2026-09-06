@@ -156,7 +156,10 @@ export default function SwipeSheet({
   return (
     <div
       className="fixed inset-0 z-40 flex flex-col justify-end overscroll-none"
-      style={{ touchAction: "none" }}
+      style={{
+        touchAction: "none",
+        paddingTop: "max(0.75rem, env(safe-area-inset-top, 0px))",
+      }}
     >
       <button
         ref={backdropRef}
@@ -171,7 +174,7 @@ export default function SwipeSheet({
         ref={sheetRef}
         className="relative mx-auto flex w-full max-w-[480px] flex-col overflow-hidden rounded-t-[var(--radius-sheet)] border border-b-0 border-[var(--color-line)] bg-[var(--color-canvas)] shadow-[0_-8px_40px_rgba(0,0,0,0.25)] sm:max-w-xl will-change-transform"
         style={{
-          maxHeight: "min(92vh, 920px)",
+          maxHeight: "100%",
           transform: "translate3d(0, 100%, 0)",
         }}
         onPointerMove={(event) => moveDrag(event.clientY)}
