@@ -62,71 +62,39 @@ body {
   display: none;
 }
 
-/* Только в PWA: градиентный блюр под статус-бар */
+/* Шапка: фон уходит под статус-бар, контент — ниже safe-area */
+.app-header {
+  top: 0;
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+}
+
+/* PWA: градиентный блюр только над статус-баром */
 .pwa-status-blur {
   display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(env(safe-area-inset-top, 0px) + 36px);
+  z-index: 25;
+  pointer-events: none;
+  backdrop-filter: blur(48px) saturate(1.25);
+  -webkit-backdrop-filter: blur(48px) saturate(1.25);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 40%, transparent 100%);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 40%,
+    transparent 100%
+  );
 }
 
 @media (display-mode: standalone), (display-mode: fullscreen) {
   .pwa-status-blur {
     display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: calc(env(safe-area-inset-top, 0px) + 48px);
-    z-index: 25;
-    pointer-events: none;
-    backdrop-filter: blur(48px) saturate(1.25);
-    -webkit-backdrop-filter: blur(48px) saturate(1.25);
-    mask-image: linear-gradient(
-      to bottom,
-      #000 0%,
-      #000 35%,
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      #000 0%,
-      #000 35%,
-      transparent 100%
-    );
-  }
-
-  /* отступ у оболочки, не у body — иначе ломается scroll-lock шторок */
-  .app-shell {
-    padding-top: env(safe-area-inset-top, 0px);
-  }
-
-  .app-header {
-    top: env(safe-area-inset-top, 0px);
   }
 }
 
 html.pwa-standalone .pwa-status-blur {
   display: block;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: calc(env(safe-area-inset-top, 0px) + 48px);
-  z-index: 25;
-  pointer-events: none;
-  backdrop-filter: blur(48px) saturate(1.25);
-  -webkit-backdrop-filter: blur(48px) saturate(1.25);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 35%, transparent 100%);
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    #000 0%,
-    #000 35%,
-    transparent 100%
-  );
-}
-
-html.pwa-standalone .app-shell {
-  padding-top: env(safe-area-inset-top, 0px);
-}
-
-html.pwa-standalone .app-header {
-  top: env(safe-area-inset-top, 0px);
 }

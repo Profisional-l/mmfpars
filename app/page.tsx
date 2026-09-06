@@ -122,7 +122,7 @@ export default function HomePage() {
       <div className="pwa-status-blur" aria-hidden />
 
       <main className="app-shell mx-auto flex w-full max-w-[480px] flex-col px-3 pb-[max(2.5rem,env(safe-area-inset-bottom))] sm:px-4 md:max-w-3xl xl:max-w-6xl">
-        <header className="app-header sticky top-0 z-10 -mx-3 mb-3 border-b border-[var(--color-line)] bg-[var(--color-canvas)] px-3 py-3 sm:-mx-4 sm:px-4">
+        <header className="app-header sticky z-10 -mx-3 mb-3 border-b border-[var(--color-line)] bg-[var(--color-canvas)] px-3 pb-3 sm:-mx-4 sm:px-4">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
             <div className="min-w-0">
               <h1 className="truncate text-[15px] font-semibold sm:text-base">

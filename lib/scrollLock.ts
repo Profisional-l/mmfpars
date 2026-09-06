@@ -15,6 +15,7 @@ export function lockBodyScroll(): () => void {
     bodyRight: body.style.right,
     bodyWidth: body.style.width,
     bodyPaddingTop: body.style.paddingTop,
+    bodyPaddingBottom: body.style.paddingBottom,
   };
 
   html.style.scrollBehavior = "auto";
@@ -26,8 +27,9 @@ export function lockBodyScroll(): () => void {
   body.style.left = "0";
   body.style.right = "0";
   body.style.width = "100%";
-  // padding-top у body в PWA ломает fixed-lock → визуальный скачок
+  // убираем safe-area padding — иначе в PWA снизу/сверху появляется полоса
   body.style.paddingTop = "0";
+  body.style.paddingBottom = "0";
 
   return () => {
     body.style.overflow = prev.bodyOverflow;
@@ -37,6 +39,7 @@ export function lockBodyScroll(): () => void {
     body.style.right = prev.bodyRight;
     body.style.width = prev.bodyWidth;
     body.style.paddingTop = prev.bodyPaddingTop;
+    body.style.paddingBottom = prev.bodyPaddingBottom;
     html.style.overflow = prev.htmlOverflow;
     html.style.overscrollBehavior = prev.htmlOverscroll;
 
