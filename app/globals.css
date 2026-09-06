@@ -68,6 +68,17 @@ body {
   padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
 }
 
+/* PWA: больше зазор под блюром статус-бара */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .app-header {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
+  }
+}
+
+html.pwa-standalone .app-header {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
+}
+
 /* PWA: градиентный блюр только над статус-баром */
 .pwa-status-blur {
   display: none;
@@ -75,16 +86,16 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: calc(env(safe-area-inset-top, 0px) + 36px);
+  height: calc(env(safe-area-inset-top, 0px) + 28px);
   z-index: 25;
   pointer-events: none;
   backdrop-filter: blur(48px) saturate(1.25);
   -webkit-backdrop-filter: blur(48px) saturate(1.25);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 40%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%);
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 40%,
+    #000 45%,
     transparent 100%
   );
 }

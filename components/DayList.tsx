@@ -111,7 +111,7 @@ export default function DayList({
             <section
               key={day}
               ref={isToday ? todayRef : isTomorrow ? tomorrowRef : undefined}
-              className={`scroll-mt-[calc(env(safe-area-inset-top,0px)+4.5rem)] rounded-[var(--radius-panel)] border p-3 ${
+              className={`scroll-mt-[calc(env(safe-area-inset-top,0px)+5.25rem)] rounded-[var(--radius-panel)] border p-3 ${
                 isToday
                   ? "border-[var(--color-accent)] bg-[var(--color-accent-soft)]"
                   : isTomorrow

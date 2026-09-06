@@ -25,6 +25,10 @@ function viewportHeight(): number {
   return Math.round(window.visualViewport?.height ?? window.innerHeight);
 }
 
+function sheetMaxHeightPx(): number {
+  return Math.max(240, viewportHeight() - topGapPx());
+}
+
 /** Нижняя шторка: portal в body + высота по visualViewport (PWA/iOS). */
 export default function SwipeSheet({
   title,
@@ -50,25 +54,32 @@ export default function SwipeSheet({
   const opened = useRef(false);
 
   const [mounted, setMounted] = useState(false);
-  const [maxHeight, setMaxHeight] = useState<number | null>(null);
 
   useEffect(() => setMounted(true), []);
 
+  // один раз на жизнь шторки — не перезапускать при resize viewport
+  useEffect(() => {
+    if (!mounted) return;
+    return lockBodyScroll();
+  }, [mounted]);
+
   useLayoutEffect(() => {
-    const sync = () => {
-      setMaxHeight(Math.max(240, viewportHeight() - topGapPx()));
+    if (!mounted) return;
+
+    const applyHeight = () => {
+      const sheet = sheetRef.current;
+      if (sheet) sheet.style.maxHeight = `${sheetMaxHeightPx()}px`;
     };
-    sync();
+
+    applyHeight();
     const vv = window.visualViewport;
-    vv?.addEventListener("resize", sync);
-    vv?.addEventListener("scroll", sync);
-    window.addEventListener("resize", sync);
+    vv?.addEventListener("resize", applyHeight);
+    window.addEventListener("resize", applyHeight);
     return () => {
-      vv?.removeEventListener("resize", sync);
-      vv?.removeEventListener("scroll", sync);
-      window.removeEventListener("resize", sync);
+      vv?.removeEventListener("resize", applyHeight);
+      window.removeEventListener("resize", applyHeight);
     };
-  }, []);
+  }, [mounted]);
 
   const applyOffset = useCallback((y: number, withTransition: string | null) => {
     const sheet = sheetRef.current;
@@ -90,11 +101,11 @@ export default function SwipeSheet({
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
     const sheet = sheetRef.current;
-    if (!sheet || maxHeight == null) return;
+    if (!sheet) return;
 
-    const unlock = lockBodyScroll();
-
+    sheet.style.maxHeight = `${sheetMaxHeightPx()}px`;
     sheet.style.transition = "none";
     sheet.style.transform = "translate3d(0, 100%, 0)";
     if (backdropRef.current) backdropRef.current.style.opacity = "0";
@@ -112,11 +123,8 @@ export default function SwipeSheet({
       });
     });
 
-    return () => {
-      cancelAnimationFrame(id);
-      unlock();
-    };
-  }, [maxHeight]);
+    return () => cancelAnimationFrame(id);
+  }, [mounted]);
 
   const finishClose = useCallback(() => {
     if (closing.current) return;
@@ -204,7 +212,7 @@ export default function SwipeSheet({
         ref={sheetRef}
         className="relative mx-auto flex w-full max-w-[480px] flex-col overflow-hidden rounded-t-[var(--radius-sheet)] border border-b-0 border-[var(--color-line)] bg-[var(--color-canvas)] shadow-[0_-8px_40px_rgba(0,0,0,0.25)] sm:max-w-xl will-change-transform"
         style={{
-          maxHeight: maxHeight != null ? `${maxHeight}px` : "85dvh",
+          maxHeight: `${sheetMaxHeightPx()}px`,
           transform: "translate3d(0, 100%, 0)",
         }}
         onPointerMove={(event) => moveDrag(event.clientY)}
