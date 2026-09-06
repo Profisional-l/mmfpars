@@ -155,26 +155,25 @@ export default function SwipeSheet({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex flex-col justify-end overscroll-none"
+      className="fixed inset-x-0 bottom-0 z-40 flex flex-col justify-end overscroll-none"
       style={{
         touchAction: "none",
-        paddingTop: "max(0.75rem, env(safe-area-inset-top, 0px))",
+        top: "max(0.75rem, env(safe-area-inset-top, 0px))",
       }}
     >
       <button
         ref={backdropRef}
         type="button"
         aria-label="Закрыть"
-        className="absolute inset-0 bg-black"
+        className="fixed inset-0 bg-black"
         style={{ opacity: 0 }}
         onClick={finishClose}
       />
 
       <div
         ref={sheetRef}
-        className="relative mx-auto flex w-full max-w-[480px] flex-col overflow-hidden rounded-t-[var(--radius-sheet)] border border-b-0 border-[var(--color-line)] bg-[var(--color-canvas)] shadow-[0_-8px_40px_rgba(0,0,0,0.25)] sm:max-w-xl will-change-transform"
+        className="relative mx-auto flex min-h-0 max-h-full w-full max-w-[480px] flex-col overflow-hidden rounded-t-[var(--radius-sheet)] border border-b-0 border-[var(--color-line)] bg-[var(--color-canvas)] shadow-[0_-8px_40px_rgba(0,0,0,0.25)] sm:max-w-xl will-change-transform"
         style={{
-          maxHeight: "100%",
           transform: "translate3d(0, 100%, 0)",
         }}
         onPointerMove={(event) => moveDrag(event.clientY)}
@@ -215,7 +214,9 @@ export default function SwipeSheet({
             <h2 className="text-[15px] font-semibold leading-none">{title}</h2>
           </div>
 
-          <div className="px-4 pb-6">{children}</div>
+          <div className="px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+            {children}
+          </div>
         </div>
       </div>
     </div>

@@ -62,7 +62,7 @@ body {
   display: none;
 }
 
-/* Только в PWA: градиентный блюр под статус-бар, без фиксации UI */
+/* Только в PWA: градиентный блюр под статус-бар */
 .pwa-status-blur {
   display: none;
 }
@@ -93,8 +93,13 @@ body {
     );
   }
 
-  body {
+  /* отступ у оболочки, не у body — иначе ломается scroll-lock шторок */
+  .app-shell {
     padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .app-header {
+    top: env(safe-area-inset-top, 0px);
   }
 }
 
@@ -118,6 +123,10 @@ html.pwa-standalone .pwa-status-blur {
   );
 }
 
-html.pwa-standalone body {
+html.pwa-standalone .app-shell {
   padding-top: env(safe-area-inset-top, 0px);
+}
+
+html.pwa-standalone .app-header {
+  top: env(safe-area-inset-top, 0px);
 }
