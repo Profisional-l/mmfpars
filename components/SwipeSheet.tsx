@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { lockBodyScroll } from "@/lib/scrollLock";
+import { getSheetRoot } from "@/lib/sheetRoot";
 
 const DISMISS_DISTANCE = 140;
 const DISMISS_VELOCITY = 0.9;
@@ -40,6 +41,7 @@ export default function SwipeSheet({
   children: React.ReactNode;
 }) {
   const sheetRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLButtonElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -67,16 +69,25 @@ export default function SwipeSheet({
     if (!mounted) return;
 
     const applyHeight = () => {
+      const vv = window.visualViewport;
+      const full = viewportHeight();
       const sheet = sheetRef.current;
+      const root = rootRef.current;
       if (sheet) sheet.style.maxHeight = `${sheetMaxHeightPx()}px`;
+      if (root) {
+        root.style.height = `${full}px`;
+        root.style.top = `${vv?.offsetTop ?? 0}px`;
+      }
     };
 
     applyHeight();
     const vv = window.visualViewport;
     vv?.addEventListener("resize", applyHeight);
+    vv?.addEventListener("scroll", applyHeight);
     window.addEventListener("resize", applyHeight);
     return () => {
       vv?.removeEventListener("resize", applyHeight);
+      vv?.removeEventListener("scroll", applyHeight);
       window.removeEventListener("resize", applyHeight);
     };
   }, [mounted]);
@@ -196,8 +207,13 @@ export default function SwipeSheet({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex flex-col justify-end overscroll-none"
-      style={{ touchAction: "none" }}
+      ref={rootRef}
+      className="fixed left-0 z-[100] flex w-full flex-col justify-end overscroll-none"
+      style={{
+        touchAction: "none",
+        top: 0,
+        height: `${viewportHeight()}px`,
+      }}
     >
       <button
         ref={backdropRef}
@@ -257,6 +273,6 @@ export default function SwipeSheet({
         </div>
       </div>
     </div>,
-    document.body,
+    getSheetRoot(),
   );
 }
