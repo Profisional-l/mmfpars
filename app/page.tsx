@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import DayList from "@/components/DayList";
 import SettingsSheet from "@/components/SettingsSheet";
-import { minskNow, type MinskNow } from "@/lib/week";
+import { minskNow, displayWeek, type MinskNow } from "@/lib/week";
 import { applyTheme } from "@/lib/theme";
 import {
   cacheCatalog,
@@ -122,14 +122,14 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto flex w-full max-w-[480px] flex-col px-3 pb-[max(2.5rem,env(safe-area-inset-bottom))] sm:px-4 md:max-w-3xl xl:max-w-6xl">
-      <header className="sticky top-0 z-10 -mx-3 mb-3 border-b border-[var(--color-line)] bg-[var(--color-canvas)] px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 sm:-mx-4 sm:px-4">
+      <header className="sticky top-0 z-10 -mx-3 mb-3 border-b border-[var(--color-line)]/60 bg-[var(--color-canvas)]/70 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur-xl backdrop-saturate-150 sm:-mx-4 sm:px-4">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
           <div className="min-w-0">
             <h1 className="truncate text-[15px] font-semibold sm:text-base">
               {settings.course} курс · {groupLabel}
             </h1>
             <p className="truncate text-[12px] text-[var(--color-muted)] sm:text-[13px]">
-              {now ? `${now.week}-я неделя` : "…"}
+              {now ? `${displayWeek(now.date)}-я неделя` : "…"}
               {settings.showAllWeeks ? " · показаны все недели" : ""}
               {schedule?.speciality ? ` · ${schedule.speciality}` : ""}
             </p>

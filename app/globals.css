@@ -50,3 +50,12 @@ body {
     scroll-behavior: smooth;
   }
 }
+
+.sheet-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sheet-scroll::-webkit-scrollbar {
+  display: none;
+}

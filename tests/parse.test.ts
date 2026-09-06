@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseSchedule, splitSubjectCell } from "../lib/parseSchedule";
 import { parseCourseGroups } from "../lib/parseCatalog";
-import { collectSubgroupOptions, visibleLessons } from "../lib/filterLessons";
-import { weekForDate } from "../lib/week";
+import { collectSubgroupOptions, matchesDate, visibleLessons } from "../lib/filterLessons";
+import { dateOfDayFromMonday, dateOfDayInWeek, displayWeek, nextDisplayWeekMonday, weekForDate } from "../lib/week";
 
 const scheduleHtml = readFileSync(
   new URL("./fixtures/3-8.html", import.meta.url),
@@ -167,4 +167,45 @@ test("нумерация недель от начала семестра", () =>
   assert.equal(weekForDate("2026-09-06"), 1);
   assert.equal(weekForDate("2026-09-07"), 2);
   assert.equal(weekForDate("2026-09-14"), 1);
+});
+
+test("учебная неделя: вс открывает следующий пн–сб", () => {
+  // воскресенье 6 сентября → показываем пн 7-е … сб 12-е (2н)
+  assert.equal(dateOfDayInWeek("2026-09-06", "monday"), "2026-09-07");
+  assert.equal(dateOfDayInWeek("2026-09-06", "saturday"), "2026-09-12");
+  assert.equal(displayWeek("2026-09-06"), 2);
+
+  // среда — дни внутри текущей учебной недели, а не «вперёд на следующую»
+  assert.equal(dateOfDayInWeek("2026-09-02", "monday"), "2026-08-31");
+  assert.equal(dateOfDayInWeek("2026-09-02", "wednesday"), "2026-09-02");
+  assert.equal(dateOfDayInWeek("2026-09-02", "saturday"), "2026-09-05");
+  assert.equal(displayWeek("2026-09-02"), 1);
+});
+
+test("следующая учебная неделя от отображаемой", () => {
+  // вс 6.09 → текущая отображаемая пн 7.09, следующая — 14.09 (1н)
+  assert.equal(nextDisplayWeekMonday("2026-09-06"), "2026-09-14");
+  assert.equal(dateOfDayFromMonday("2026-09-14", "saturday"), "2026-09-19");
+  assert.equal(weekForDate(nextDisplayWeekMonday("2026-09-06")), 1);
+});
+
+test("фильтр дат: с / до включительно", () => {
+  const base = {
+    id: "1",
+    day: "monday" as const,
+    start: "08:15",
+    end: "09:35",
+    subject: "X",
+    teacher: "",
+    room: "",
+    type: "lecture" as const,
+    week: null as 1 | 2 | null,
+    subgroups: [] as string[],
+    notes: "",
+  };
+
+  assert.equal(matchesDate({ ...base, dateTo: "2026-11-18" }, "2026-11-18"), true);
+  assert.equal(matchesDate({ ...base, dateTo: "2026-11-18" }, "2026-11-19"), false);
+  assert.equal(matchesDate({ ...base, dateFrom: "2026-09-29" }, "2026-09-28"), false);
+  assert.equal(matchesDate({ ...base, dateFrom: "2026-09-29" }, "2026-09-29"), true);
 });

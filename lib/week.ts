@@ -69,11 +69,35 @@ export function minskNow(now: Date = new Date()): MinskNow {
   };
 }
 
-/** Дата (YYYY-MM-DD) ближайшего указанного дня недели, начиная с today. */
+/**
+ * Понедельник учебной недели, которую показываем в списке.
+ * Пн–сб → понедельник этой календарной недели.
+ * Вс → следующий понедельник (учебная неделя уже «закончилась»).
+ */
+export function displayWeekMonday(today: string): string {
+  const weekday = weekdayIndexOf(today);
+  if (weekday === 6) return addDays(today, 1);
+  return addDays(today, -weekday);
+}
+
+/** Дата дня внутри показываемой учебной недели (пн–сб). */
 export function dateOfDayInWeek(today: string, day: DayId): string {
-  const target = DAY_ORDER.indexOf(day);
-  const current = weekdayIndexOf(today);
-  return addDays(today, target - current);
+  return addDays(displayWeekMonday(today), DAY_ORDER.indexOf(day));
+}
+
+/** 1н/2н для списка дней — по понедельнику отображаемой недели. */
+export function displayWeek(today: string): 1 | 2 {
+  return weekForDate(displayWeekMonday(today));
+}
+
+/** Понедельник следующей учебной недели относительно отображаемой. */
+export function nextDisplayWeekMonday(today: string): string {
+  return addDays(displayWeekMonday(today), 7);
+}
+
+/** Дата дня от заданного понедельника (пн–сб). */
+export function dateOfDayFromMonday(monday: string, day: DayId): string {
+  return addDays(monday, DAY_ORDER.indexOf(day));
 }
 
 export function timeToMinutes(time: string): number {
