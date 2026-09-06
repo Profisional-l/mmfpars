@@ -1,16 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { lockBodyScroll } from "@/lib/scrollLock";
 
 const DISMISS_DISTANCE = 140;
-const DISMISS_VELOCITY = 0.9; // px/ms
+const DISMISS_VELOCITY = 0.9;
 const OPEN_MS = 360;
 const CLOSE_MIN_MS = 280;
 const CLOSE_MAX_MS = 480;
 const SNAP_MS = 320;
 
-/** Нижняя шторка: палец ведёт без лагов, закрытие дотягивается плавно. */
+function topGapPx(): number {
+  const probe = document.createElement("div");
+  probe.style.cssText =
+    "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px)";
+  document.body.appendChild(probe);
+  const sat = probe.clientHeight || 0;
+  probe.remove();
+  return Math.max(12, sat);
+}
+
+function viewportHeight(): number {
+  return Math.round(window.visualViewport?.height ?? window.innerHeight);
+}
+
+/** Нижняя шторка: portal в body + высота по visualViewport (PWA/iOS). */
 export default function SwipeSheet({
   title,
   onClose,
@@ -34,6 +49,27 @@ export default function SwipeSheet({
   const closing = useRef(false);
   const opened = useRef(false);
 
+  const [mounted, setMounted] = useState(false);
+  const [maxHeight, setMaxHeight] = useState<number | null>(null);
+
+  useEffect(() => setMounted(true), []);
+
+  useLayoutEffect(() => {
+    const sync = () => {
+      setMaxHeight(Math.max(240, viewportHeight() - topGapPx()));
+    };
+    sync();
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", sync);
+    vv?.addEventListener("scroll", sync);
+    window.addEventListener("resize", sync);
+    return () => {
+      vv?.removeEventListener("resize", sync);
+      vv?.removeEventListener("scroll", sync);
+      window.removeEventListener("resize", sync);
+    };
+  }, []);
+
   const applyOffset = useCallback((y: number, withTransition: string | null) => {
     const sheet = sheetRef.current;
     const backdrop = backdropRef.current;
@@ -55,11 +91,10 @@ export default function SwipeSheet({
 
   useEffect(() => {
     const sheet = sheetRef.current;
-    if (!sheet) return;
+    if (!sheet || maxHeight == null) return;
 
     const unlock = lockBodyScroll();
 
-    // стартуем за экраном, затем плавно выезжаем
     sheet.style.transition = "none";
     sheet.style.transform = "translate3d(0, 100%, 0)";
     if (backdropRef.current) backdropRef.current.style.opacity = "0";
@@ -81,7 +116,7 @@ export default function SwipeSheet({
       cancelAnimationFrame(id);
       unlock();
     };
-  }, []);
+  }, [maxHeight]);
 
   const finishClose = useCallback(() => {
     if (closing.current) return;
@@ -93,7 +128,6 @@ export default function SwipeSheet({
     const height = (sheet?.getBoundingClientRect().height ?? 520) + 32;
     const remaining = Math.max(0, height - offsetRef.current);
     const v = Math.abs(velocity.current);
-    // быстрее жест → чуть короче анимация, но не рывок
     const duration = Math.round(
       Math.min(
         CLOSE_MAX_MS,
@@ -132,7 +166,6 @@ export default function SwipeSheet({
     lastTs.current = now;
 
     let next = clientY - startY.current;
-    // лёгкий резиновый упор вверх
     if (next < 0) next = next * 0.18;
     applyOffset(Math.max(0, next), null);
   };
@@ -148,14 +181,14 @@ export default function SwipeSheet({
       finishClose();
       return;
     }
-
-    // плавный откат на место
     applyOffset(0, `transform ${SNAP_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`);
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-40 flex flex-col justify-end overscroll-none"
+      className="fixed inset-0 z-[100] flex flex-col justify-end overscroll-none"
       style={{ touchAction: "none" }}
     >
       <button
@@ -171,9 +204,7 @@ export default function SwipeSheet({
         ref={sheetRef}
         className="relative mx-auto flex w-full max-w-[480px] flex-col overflow-hidden rounded-t-[var(--radius-sheet)] border border-b-0 border-[var(--color-line)] bg-[var(--color-canvas)] shadow-[0_-8px_40px_rgba(0,0,0,0.25)] sm:max-w-xl will-change-transform"
         style={{
-          // явный расчёт: до низа экрана, сверху оставляем статус-бар
-          maxHeight:
-            "calc(100dvh - max(0.75rem, env(safe-area-inset-top, 0px)))",
+          maxHeight: maxHeight != null ? `${maxHeight}px` : "85dvh",
           transform: "translate3d(0, 100%, 0)",
         }}
         onPointerMove={(event) => moveDrag(event.clientY)}
@@ -183,7 +214,7 @@ export default function SwipeSheet({
         <div
           ref={scrollRef}
           className="sheet-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
-          style={{ touchAction: "pan-y" }}
+          style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}
           onPointerDown={(event) => {
             if ((scrollRef.current?.scrollTop ?? 0) > 0) return;
             armed.current = true;
@@ -214,9 +245,10 @@ export default function SwipeSheet({
             <h2 className="text-[15px] font-semibold leading-none">{title}</h2>
           </div>
 
-          <div className="px-4 pb-5">{children}</div>
+          <div className="px-4 pb-8">{children}</div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
