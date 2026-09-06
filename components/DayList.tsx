@@ -111,7 +111,7 @@ export default function DayList({
             <section
               key={day}
               ref={isToday ? todayRef : isTomorrow ? tomorrowRef : undefined}
-              className={`scroll-mt-28 rounded-3xl border p-3 ${
+              className={`scroll-mt-24 rounded-[var(--radius-panel)] border p-3 ${
                 isToday
                   ? "border-[var(--color-accent)] bg-[var(--color-accent-soft)]"
                   : isTomorrow
@@ -185,7 +185,7 @@ export default function DayList({
         aria-label={fabLabel}
         title={fabLabel}
         onClick={() => scrollToToday("smooth")}
-        className={`fixed right-4 z-10 flex size-9 items-center justify-center rounded-full border border-[var(--color-line)] bg-[var(--color-surface)]/90 shadow-[0_6px_18px_rgba(0,0,0,0.2)] backdrop-blur-md transition-all duration-200 bottom-[max(1rem,env(safe-area-inset-bottom))] ${
+        className={`fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-10 flex size-9 items-center justify-center rounded-full border border-[var(--color-line)] bg-[var(--color-surface)]/90 shadow-[0_6px_18px_rgba(0,0,0,0.2)] backdrop-blur-md transition-all duration-200 ${
           awayFromToday
             ? "translate-y-0 opacity-100"
             : "pointer-events-none translate-y-3 opacity-0"

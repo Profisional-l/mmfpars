@@ -66,5 +66,12 @@ export const THEME_BOOTSTRAP_SCRIPT = `
     "apple-mobile-web-app-status-bar-style",
     theme === "dark" ? "black-translucent" : "default"
   );
+  try {
+    var standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.matchMedia("(display-mode: fullscreen)").matches ||
+      window.navigator.standalone === true;
+    if (standalone) document.documentElement.classList.add("pwa-standalone");
+  } catch (error) {}
 })();
 `;

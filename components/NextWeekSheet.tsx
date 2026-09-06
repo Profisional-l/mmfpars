@@ -75,7 +75,7 @@ export default function NextWeekSheet({
           return (
             <section
               key={day}
-              className="rounded-3xl border border-[var(--color-line)] bg-[var(--color-canvas)] p-3"
+              className="rounded-[var(--radius-panel)] border border-[var(--color-line)] bg-[var(--color-canvas)] p-3"
             >
               <header className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 px-1">
                 <h3 className="text-[15px] font-semibold">{DAY_LABELS[day]}</h3>

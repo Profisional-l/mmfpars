@@ -23,7 +23,7 @@ export default function LessonCard({
 
   return (
     <li
-      className={`rounded-2xl border bg-[var(--color-surface)] p-3 ${
+      className={`rounded-[var(--radius-card)] border bg-[var(--color-surface)] p-3 ${
         isNow
           ? "border-[var(--color-accent)]"
           : "border-[var(--color-line)]"

@@ -43,7 +43,6 @@ export default function HomePage() {
     return () => window.clearInterval(timer);
   }, []);
 
-  // список групп нужен только настройкам, но грузим один раз за сессию
   useEffect(() => {
     if (!ready) return;
 
@@ -72,7 +71,6 @@ export default function HomePage() {
     setLoading(true);
     setError(null);
 
-    // без кэша лучше показать загрузку, чем расписание предыдущей группы
     const cached = readCachedSchedule(settings.course, settings.group);
     setSchedule(cached);
 
@@ -112,7 +110,6 @@ export default function HomePage() {
   }, []);
 
   const lessons = useMemo(() => schedule?.lessons ?? [], [schedule]);
-  // «8-gruppa» → «8 группа», «vf» → «ВФ»
   const numbered = settings.group.match(/^(\d+)-gruppa$/);
   const groupLabel = numbered
     ? `${numbered[1]} группа`
@@ -121,66 +118,65 @@ export default function HomePage() {
       : settings.group;
 
   return (
-    <main className="mx-auto flex w-full max-w-[480px] flex-col px-3 pb-[max(2.5rem,env(safe-area-inset-bottom))] sm:px-4 md:max-w-3xl xl:max-w-6xl">
-      <header className="sticky top-0 z-10 -mx-3 mb-3 border-b border-[var(--color-line)]/60 bg-[var(--color-canvas)]/70 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 backdrop-blur-xl backdrop-saturate-150 sm:-mx-4 sm:px-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="truncate text-[15px] font-semibold sm:text-base">
-              {settings.course} курс · {groupLabel}
-            </h1>
-            <p className="truncate text-[12px] text-[var(--color-muted)] sm:text-[13px]">
-              {now ? `${displayWeek(now.date)}-я неделя` : "…"}
-              {settings.showAllWeeks ? " · показаны все недели" : ""}
-              {schedule?.speciality ? ` · ${schedule.speciality}` : ""}
-            </p>
+    <>
+      <div className="pwa-status-blur" aria-hidden />
+
+      <main className="mx-auto flex w-full max-w-[480px] flex-col px-3 pb-[max(2.5rem,env(safe-area-inset-bottom))] sm:px-4 md:max-w-3xl xl:max-w-6xl">
+        <header className="sticky top-0 z-10 -mx-3 mb-3 border-b border-[var(--color-line)] bg-[var(--color-canvas)] px-3 py-3 sm:-mx-4 sm:px-4">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="truncate text-[15px] font-semibold sm:text-base">
+                {settings.course} курс · {groupLabel}
+              </h1>
+              <p className="truncate text-[12px] text-[var(--color-muted)] sm:text-[13px]">
+                {now ? `${displayWeek(now.date)}-я неделя` : "…"}
+                {settings.showAllWeeks ? " · показаны все недели" : ""}
+                {schedule?.speciality ? ` · ${schedule.speciality}` : ""}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              className="shrink-0 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-1.5 text-[13px] transition-colors hover:border-[var(--color-accent)]"
+            >
+              Настройки
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setSettingsOpen(true)}
-            className="shrink-0 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-1.5 text-[13px] transition-colors hover:border-[var(--color-accent)]"
-          >
-            Настройки
-          </button>
-        </div>
-      </header>
+        </header>
 
-      {error && (
-        <p className="mb-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 text-[13px] text-[var(--color-muted)]">
-          {error}
-        </p>
-      )}
+        {error && (
+          <p className="mb-3 rounded-[var(--radius-panel)] border border-[var(--color-line)] bg-[var(--color-surface)] p-3 text-[13px] text-[var(--color-muted)]">
+            {error}
+          </p>
+        )}
 
-      {loading && !schedule && (
-        <p className="p-3 text-[13px] text-[var(--color-muted)]">
-          Загружаем расписание…
-        </p>
-      )}
+        {loading && !schedule && (
+          <p className="p-3 text-[13px] text-[var(--color-muted)]">
+            Загружаем расписание…
+          </p>
+        )}
 
-      {now && schedule && (
-        <DayList
-          lessons={lessons}
-          now={now}
-          choices={settings.subgroups}
-          showAllWeeks={settings.showAllWeeks}
-        />
-      )}
+        {now && schedule && (
+          <DayList
+            lessons={lessons}
+            now={now}
+            choices={settings.subgroups}
+            showAllWeeks={settings.showAllWeeks}
+          />
+        )}
 
-      {schedule?.updatedAt && (
-        <p className="mt-4 px-1 text-[12px] text-[var(--color-muted)]">
-          Обновлено на сайте: {schedule.updatedAt}
-        </p>
-      )}
-
-      {settingsOpen && (
-        <SettingsSheet
-          settings={settings}
-          lessons={lessons}
-          catalog={catalog}
-          catalogError={catalogError}
-          onChange={updateSettings}
-          onClose={() => setSettingsOpen(false)}
-        />
-      )}
-    </main>
+        {settingsOpen && (
+          <SettingsSheet
+            settings={settings}
+            lessons={lessons}
+            catalog={catalog}
+            catalogError={catalogError}
+            updatedAt={schedule?.updatedAt ?? null}
+            onChange={updateSettings}
+            onClose={() => setSettingsOpen(false)}
+          />
+        )}
+      </main>
+    </>
   );
 }
