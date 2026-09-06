@@ -109,3 +109,13 @@ html.pwa-standalone .app-header {
 html.pwa-standalone .pwa-status-blur {
   display: block;
 }
+
+/* Корень шторки не должен создавать лишних отступов */
+#mmf-sheet-root {
+  position: contents;
+}
+
+#mmf-sheet-root .mmf-sheet-overlay {
+  position: fixed;
+  inset: 0;
+}

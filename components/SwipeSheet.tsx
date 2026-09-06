@@ -22,15 +22,22 @@ function topGapPx(): number {
   return Math.max(12, sat);
 }
 
-function viewportHeight(): number {
-  return Math.round(window.visualViewport?.height ?? window.innerHeight);
+/** Полная высота экрана (включая home indicator), не «урезанный» visualViewport. */
+function screenHeight(): number {
+  return Math.max(
+    window.innerHeight,
+    document.documentElement.clientHeight,
+    Math.round(
+      (window.visualViewport?.height ?? 0) +
+        (window.visualViewport?.offsetTop ?? 0),
+    ),
+  );
 }
 
 function sheetMaxHeightPx(): number {
-  return Math.max(240, viewportHeight() - topGapPx());
+  return Math.max(240, screenHeight() - topGapPx());
 }
 
-/** Нижняя шторка: portal в body + высота по visualViewport (PWA/iOS). */
 export default function SwipeSheet({
   title,
   onClose,
@@ -41,7 +48,6 @@ export default function SwipeSheet({
   children: React.ReactNode;
 }) {
   const sheetRef = useRef<HTMLDivElement>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLButtonElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -59,7 +65,6 @@ export default function SwipeSheet({
 
   useEffect(() => setMounted(true), []);
 
-  // один раз на жизнь шторки — не перезапускать при resize viewport
   useEffect(() => {
     if (!mounted) return;
     return lockBodyScroll();
@@ -69,26 +74,16 @@ export default function SwipeSheet({
     if (!mounted) return;
 
     const applyHeight = () => {
-      const vv = window.visualViewport;
-      const full = viewportHeight();
       const sheet = sheetRef.current;
-      const root = rootRef.current;
       if (sheet) sheet.style.maxHeight = `${sheetMaxHeightPx()}px`;
-      if (root) {
-        root.style.height = `${full}px`;
-        root.style.top = `${vv?.offsetTop ?? 0}px`;
-      }
     };
 
     applyHeight();
-    const vv = window.visualViewport;
-    vv?.addEventListener("resize", applyHeight);
-    vv?.addEventListener("scroll", applyHeight);
     window.addEventListener("resize", applyHeight);
+    window.visualViewport?.addEventListener("resize", applyHeight);
     return () => {
-      vv?.removeEventListener("resize", applyHeight);
-      vv?.removeEventListener("scroll", applyHeight);
       window.removeEventListener("resize", applyHeight);
+      window.visualViewport?.removeEventListener("resize", applyHeight);
     };
   }, [mounted]);
 
@@ -207,13 +202,8 @@ export default function SwipeSheet({
 
   return createPortal(
     <div
-      ref={rootRef}
-      className="fixed left-0 z-[100] flex w-full flex-col justify-end overscroll-none"
-      style={{
-        touchAction: "none",
-        top: 0,
-        height: `${viewportHeight()}px`,
-      }}
+      className="mmf-sheet-overlay fixed inset-0 z-[100] flex flex-col justify-end overscroll-none"
+      style={{ touchAction: "none" }}
     >
       <button
         ref={backdropRef}
@@ -230,6 +220,9 @@ export default function SwipeSheet({
         style={{
           maxHeight: `${sheetMaxHeightPx()}px`,
           transform: "translate3d(0, 100%, 0)",
+          // до самого низа экрана, включая home indicator
+          marginBottom: 0,
+          paddingBottom: 0,
         }}
         onPointerMove={(event) => moveDrag(event.clientY)}
         onPointerUp={endDrag}
