@@ -48,6 +48,7 @@ export default function SwipeSheet({
   children: React.ReactNode;
 }) {
   const sheetRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLButtonElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -74,8 +75,15 @@ export default function SwipeSheet({
     if (!mounted) return;
 
     const applyHeight = () => {
+      const h = screenHeight();
+      const overlay = overlayRef.current;
+      if (overlay) {
+        overlay.style.height = `${h}px`;
+        overlay.style.top = "0px";
+        overlay.style.bottom = "auto";
+      }
       const sheet = sheetRef.current;
-      if (sheet) sheet.style.maxHeight = `${sheetMaxHeightPx()}px`;
+      if (sheet) sheet.style.maxHeight = `${Math.max(240, h - topGapPx())}px`;
     };
 
     applyHeight();
@@ -202,8 +210,16 @@ export default function SwipeSheet({
 
   return createPortal(
     <div
-      className="mmf-sheet-overlay fixed inset-0 z-[100] flex flex-col justify-end overscroll-none"
-      style={{ touchAction: "none" }}
+      ref={overlayRef}
+      className="mmf-sheet-overlay fixed inset-0 z-[100] overscroll-none"
+      style={{
+        touchAction: "none",
+        top: 0,
+        left: 0,
+        right: 0,
+        width: "100%",
+        height: `${screenHeight()}px`,
+      }}
     >
       <button
         ref={backdropRef}
@@ -216,11 +232,10 @@ export default function SwipeSheet({
 
       <div
         ref={sheetRef}
-        className="relative mx-auto flex w-full max-w-[480px] flex-col overflow-hidden rounded-t-[var(--radius-sheet)] border border-b-0 border-[var(--color-line)] bg-[var(--color-canvas)] shadow-[0_-8px_40px_rgba(0,0,0,0.25)] sm:max-w-xl will-change-transform"
+        className="fixed bottom-0 left-0 right-0 mx-auto flex w-full max-w-[480px] flex-col overflow-hidden rounded-t-[var(--radius-sheet)] border border-b-0 border-[var(--color-line)] bg-[var(--color-canvas)] shadow-[0_-8px_40px_rgba(0,0,0,0.25)] sm:max-w-xl will-change-transform"
         style={{
           maxHeight: `${sheetMaxHeightPx()}px`,
           transform: "translate3d(0, 100%, 0)",
-          // до самого низа экрана, включая home indicator
           marginBottom: 0,
           paddingBottom: 0,
         }}
@@ -262,7 +277,14 @@ export default function SwipeSheet({
             <h2 className="text-[15px] font-semibold leading-none">{title}</h2>
           </div>
 
-          <div className="px-4 pb-8">{children}</div>
+          <div
+            className="px-4"
+            style={{
+              paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))",
+            }}
+          >
+            {children}
+          </div>
         </div>
       </div>
     </div>,

@@ -198,7 +198,7 @@ export default function SettingsSheet({
       )}
 
       {updatedAt && (
-        <p className="mt-8 border-t border-[var(--color-line)] pt-4 text-center text-[12px] text-[var(--color-muted)]">
+        <p className="mt-4 border-t border-[var(--color-line)] pt-3 text-center text-[12px] text-[var(--color-muted)]">
           Обновлено на сайте: {updatedAt}
         </p>
       )}
