@@ -13,19 +13,32 @@ export function groupUrl(course: number, groupSlug: string): string {
 
 const REVALIDATE_SECONDS = 1800;
 
-export async function fetchPage(url: string): Promise<string> {
-  const response = await fetch(url, {
-    headers: {
-      // без user-agent сайт факультета иногда отдаёт 403
-      "user-agent":
-        "Mozilla/5.0 (compatible; mmf-schedule/1.0; +https://mmf.bsu.by)",
-      "accept-language": "ru,en;q=0.8",
-    },
-    next: { revalidate: REVALIDATE_SECONDS },
-  });
+export async function fetchPage(url: string, fresh = false): Promise<string> {
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: {
+        // без user-agent сайт факультета иногда отдаёт 403
+        "user-agent":
+          "Mozilla/5.0 (compatible; mmf-schedule/1.0; +https://mmf.bsu.by)",
+        "accept-language": "ru,en;q=0.8",
+      },
+      ...(fresh
+        ? { cache: "no-store" as const }
+        : { next: { revalidate: REVALIDATE_SECONDS } }),
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch (error) {
+    const cause = (error as { cause?: { code?: string } }).cause?.code;
+    console.error("MMF source request failed", { url, cause, error });
+    if (cause === "UND_ERR_CONNECT_TIMEOUT" || (error as Error).name === "TimeoutError") {
+      throw new Error("Сервер приложения не дождался ответа сайта мехмата. Сайт может открываться в вашем браузере, но быть недоступен серверу приложения.");
+    }
+    throw new Error("Сервер приложения не смог подключиться к сайту мехмата.");
+  }
 
   if (!response.ok) {
-    throw new Error(`${url} вернул ${response.status}`);
+    throw new Error(`Сайт мехмата ответил серверу приложения с кодом ${response.status}.`);
   }
 
   return response.text();

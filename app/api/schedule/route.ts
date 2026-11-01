@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { parseSchedule } from "@/lib/parseSchedule";
-import { fetchPage, groupUrl } from "@/lib/source";
+import { loadSchedule } from "@/lib/loadSchedule";
+import { groupUrl } from "@/lib/source";
 
 export const revalidate = 1800;
 
@@ -10,6 +10,7 @@ export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const course = Number(params.get("course"));
   const group = params.get("group") ?? "";
+  const fresh = params.get("fresh") === "1";
 
   if (!Number.isInteger(course) || course < 1 || course > 4) {
     return NextResponse.json({ error: "Некорректный курс" }, { status: 400 });
@@ -21,9 +22,18 @@ export async function GET(request: Request) {
   const url = groupUrl(course, group);
 
   try {
-    const schedule = parseSchedule(await fetchPage(url), course, group);
-    return NextResponse.json({ ...schedule, sourceUrl: url });
+    const schedule = await loadSchedule(url, course, group, fresh);
+    if (schedule.lessons.length === 0) {
+      throw new Error("На странице мехмата не найдена таблица занятий. Возможно, изменилось расписание или разметка сайта.");
+    }
+    return NextResponse.json({ ...schedule, sourceUrl: url }, {
+      headers: {
+        "X-MMF-Region": process.env.VERCEL_REGION ?? "local",
+        ...(fresh ? { "Cache-Control": "no-store" } : {}),
+      },
+    });
   } catch (error) {
+    console.error("MMF schedule update failed", { course, group, error });
     return NextResponse.json(
       {
         error:
@@ -31,7 +41,13 @@ export async function GET(request: Request) {
             ? error.message
             : "Не удалось загрузить расписание",
       },
-      { status: 502 },
+      {
+        status: 502,
+        headers: {
+          "Cache-Control": "no-store",
+          "X-MMF-Region": process.env.VERCEL_REGION ?? "local",
+        },
+      },
     );
   }
 }

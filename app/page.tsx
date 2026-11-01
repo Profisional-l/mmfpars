@@ -30,6 +30,7 @@ export default function HomePage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [catalogError, setCatalogError] = useState(false);
+  const [reloadCount, setReloadCount] = useState(0);
 
   useEffect(() => {
     const saved = loadSettings();
@@ -90,7 +91,7 @@ export default function HomePage() {
         if (!cached) setSchedule(null);
         setError(
           cached
-            ? "Сайт мехмата недоступен — показываем сохранённую копию"
+            ? `Не удалось обновить расписание — показываем сохранённую копию. ${cause.message}`
             : cause.message,
         );
       })
@@ -101,7 +102,7 @@ export default function HomePage() {
     return () => {
       active = false;
     };
-  }, [ready, settings.course, settings.group]);
+  }, [ready, settings.course, settings.group, reloadCount]);
 
   const updateSettings = useCallback((next: Settings) => {
     setSettings(next);
@@ -147,6 +148,9 @@ export default function HomePage() {
         {error && (
           <p className="mb-3 rounded-[var(--radius-panel)] border border-[var(--color-line)] bg-[var(--color-surface)] p-3 text-[13px] text-[var(--color-muted)]">
             {error}
+            <button type="button" disabled={loading} onClick={() => setReloadCount((value) => value + 1)} className="ml-2 underline disabled:opacity-50">
+              {loading ? "Обновляем…" : "Повторить"}
+            </button>
           </p>
         )}
 

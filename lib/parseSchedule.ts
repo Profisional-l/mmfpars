@@ -26,10 +26,10 @@ function parseDay(text: string): DayId | null {
 
 /** «13:00–14:20» и старый формат «8:05–8:45–8:50–9:30» → границы пары. */
 export function parseTime(text: string): { start: string; end: string } | null {
-  const times = clean(text).match(/\d{1,2}:\d{2}/g);
+  const times = clean(text).match(/\d{1,2}[:.]\d{2}/g);
   if (!times || times.length === 0) return null;
 
-  const pad = (value: string) => value.padStart(5, "0");
+  const pad = (value: string) => value.replace(".", ":").padStart(5, "0");
   return { start: pad(times[0]), end: pad(times[times.length - 1]) };
 }
 
@@ -152,7 +152,7 @@ export function splitSubjectCell(html: string): {
 } {
   const lines = html
     .split(/<br\s*\/?>/i)
-    .map((part) => clean(cheerio.load(`<div>${part}</div>`)("div").text()))
+    .map((part) => clean(cheerio.load(part).root().text()))
     .filter(Boolean);
 
   let subject = lines.shift() ?? "";
@@ -212,28 +212,36 @@ export function parseSchedule(
   semesterStart = SEMESTER_START,
 ): Schedule {
   const $ = cheerio.load(html);
-  const table = $(".content-area table").first();
+  const googleTable = $("table.waffle").first();
+  const isGoogleSheet = googleTable.length > 0;
+  const table = isGoogleSheet ? googleTable : $(".content-area table").first();
 
   const caption = clean(table.find("caption").first().text());
   const captionMatch = caption.match(/^(\S+)\s*(?:Обновлено\s*(.*))?$/);
 
   const lessons: Lesson[] = [];
   let currentDay: DayId | null = null;
+  let currentTime: ReturnType<typeof parseTime> = null;
 
   table.find("tr").each((rowIndex, element) => {
     const row = $(element) as unknown as cheerio.Cheerio<never>;
-    if (row.find("th").length > 0) return;
+    // Google adds a row-number <th> to every data row.
+    if (!isGoogleSheet && row.find("th").length > 0) return;
 
     const cells = row.find("td");
     if (cells.length < 3) return;
 
-    const day =
-      parseDay(cellText($, row, "weekday", 0).text()) ?? currentDay;
+    const explicitDay = parseDay(cellText($, row, "weekday", 0).text());
+    if (explicitDay) currentTime = null;
+    const day = explicitDay ?? currentDay;
     if (!day) return;
     currentDay = day;
 
-    const time = parseTime(cellText($, row, "time", 1).text());
+    // Sheets leaves day/time cells blank for parallel lessons and subgroups.
+    const time = parseTime(cellText($, row, "time", 1).text()) ??
+      (isGoogleSheet ? currentTime : null);
     if (!time) return;
+    currentTime = time;
 
     const subjectCell = cellText($, row, "subject-teachers", 3);
     const { subject, teacher, notes } = splitSubjectCell(
@@ -253,7 +261,7 @@ export function parseSchedule(
       subject,
       teacher,
       type: parseType(cellText($, row, "lecture-practice", 4).text()),
-      room: clean(cellText($, row, "room", 5).text()),
+      room: clean(cellText($, row, "room", 5).clone().find("br").replaceWith(" ").end().text()),
       week,
       subgroups,
       notes,
@@ -269,7 +277,7 @@ export function parseSchedule(
   return {
     course,
     group,
-    groupTitle: captionMatch?.[1] ?? `${course}-${group}`,
+    groupTitle: captionMatch?.[1] ?? `${course}-${group.replace(/-gruppa$/, "")}`,
     speciality: clean($(".programme").first().text()),
     updatedAt: clean(captionMatch?.[2] ?? ""),
     sourceUrl: "",
