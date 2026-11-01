@@ -248,6 +248,9 @@ export default function SwipeSheet({
           className="sheet-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
           style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}
           onPointerDown={(event) => {
+            // Mouse capture on the scroll container redirects button clicks to it.
+            // Keep content gestures for touch; mouse dragging uses the header.
+            if (event.pointerType === "mouse" || !event.isPrimary) return;
             if ((scrollRef.current?.scrollTop ?? 0) > 0) return;
             armed.current = true;
             lastY.current = event.clientY;
@@ -269,6 +272,8 @@ export default function SwipeSheet({
               WebkitBackdropFilter: "blur(24px) saturate(1.4)",
             }}
             onPointerDown={(event) => {
+              if (!event.isPrimary || event.button !== 0) return;
+              event.stopPropagation();
               event.currentTarget.setPointerCapture(event.pointerId);
               beginDrag(event.clientY);
             }}
